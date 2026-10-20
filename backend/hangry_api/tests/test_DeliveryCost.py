@@ -1,5 +1,13 @@
 from api.controllers import Delivery
-from django_mock_queries.query import MockSet, MockModel
+class MockModel:
+  def __init__(self, **fields):
+    for field, value in fields.items():
+      setattr(self, field, value)
+
+
+class MockSet(list):
+  def add(self, item):
+    self.append(item)
 
 def test_LotsOfItems():
   #Arrange
