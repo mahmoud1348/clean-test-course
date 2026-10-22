@@ -1,6 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { API_URL } from '../../utils/constants';
 import axios from 'axios';
+import OrderContext from '../../context/OrderContext';
 import Home from '.';
 
 describe('Test Home', () => {
@@ -90,15 +92,47 @@ describe('Test Home', () => {
     expect(screen.queryByTestId(/category-item/i)).not.toBeInTheDocument();
   });
 
-  //Copied "Test Render"
-  test('Test Integration Render', async () => {
-    //Deleted the mock calls.  There is no Arrange for this test since this will access the shared servers.
-    //Act: Call the Home page
-    render(<Home />);
-    //Assert: Check the values in the rendered Home page.
-    //There should be 2 categories as defined in the mock response above
-    expect(await screen.findAllByTestId(/category-item/i)).toHaveLength(2);
-    //The word Appeateasers should be in there as defined in the mock response above.
-    expect(await screen.findByText('Appeteasers')).toBeInTheDocument();
+  test('shows foods for a selected category without calling a shared server', async () => {
+    const addItem = jest.fn();
+    const mockGet = jest.spyOn(axios, 'get');
+    mockGet.mockImplementation((url) => {
+      if (url === `${API_URL}/api/category/?format=json`) {
+        return Promise.resolve({
+          data: {
+            status: 'success',
+            data: [{ id: 1, name: 'Handhelds', description: 'Sandwiches' }],
+          },
+        });
+      }
+      if (url === `${API_URL}/api/food/?format=json`) {
+        return Promise.resolve({
+          data: {
+            status: 'success',
+            data: [
+              {
+                id: 1,
+                name: 'Test burger',
+                price: 5,
+                description: 'Test description',
+                category: 'Handhelds',
+              },
+            ],
+          },
+        });
+      }
+      return Promise.resolve({ data: { status: 'fail' } });
+    });
+
+    render(
+      <OrderContext.Provider value={{ addItem }}>
+        <Home />
+      </OrderContext.Provider>
+    );
+    const category = await screen.findByText('Handhelds');
+    await act(async () => {
+      await userEvent.click(category);
+    });
+
+    expect(await screen.findByText('Test burger')).toBeInTheDocument();
   });
 });

@@ -11,6 +11,7 @@ export default function Order() {
   const [subtotal, setSubtotal] = useState(0);
   const [tax, setTax] = useState(0);
   const [total, setTotal] = useState(0);
+  const [loadError, setLoadError] = useState('');
 
   const renderItem = (orderItem, idx) => {
     return (
@@ -61,35 +62,57 @@ export default function Order() {
   };
 
   useEffect(() => {
-    axios
-      .get(`${API_URL}/api/delivery/${orderName}/${deliveryDistance}`)
-      .then((response) => {
-        if (response.data.status === 'success') {
-          setDeliveryFee(response.data.data);
+    let active = true;
+    const loadTotals = async () => {
+      try {
+        const [delivery, subtotalResponse, taxResponse, totalResponse] =
+          await Promise.all([
+            axios.get(
+              `${API_URL}/api/delivery/${orderName}/${deliveryDistance}`
+            ),
+            axios.get(`${API_URL}/api/subtotal/${orderName}`),
+            axios.get(`${API_URL}/api/tax/${orderName}/${deliveryDistance}`),
+            axios.get(`${API_URL}/api/total/${orderName}/${deliveryDistance}`),
+          ]);
+
+        const responses = [
+          delivery,
+          subtotalResponse,
+          taxResponse,
+          totalResponse,
+        ];
+        if (responses.some((response) => response.data.status !== 'success')) {
+          if (active) {
+            setLoadError('The server could not calculate the order totals.');
+          }
+          return;
         }
-      });
-    axios.get(`${API_URL}/api/subtotal/${orderName}`).then((response) => {
-      if (response.data.status === 'success') {
-        setSubtotal(response.data.data);
+
+        if (active) {
+          setDeliveryFee(delivery.data.data);
+          setSubtotal(subtotalResponse.data.data);
+          setTax(taxResponse.data.data);
+          setTotal(totalResponse.data.data);
+          setLoadError('');
+        }
+      } catch (error) {
+        if (!axios.isAxiosError(error)) {
+          throw error;
+        }
+        if (active) {
+          setLoadError('Unable to load order totals. Please try again.');
+        }
       }
-    });
-    axios
-      .get(`${API_URL}/api/tax/${orderName}/${deliveryDistance}`)
-      .then((response) => {
-        if (response.data.status === 'success') {
-          setTax(response.data.data);
-        }
-      });
-    axios
-      .get(`${API_URL}/api/total/${orderName}/${deliveryDistance}`)
-      .then((response) => {
-        if (response.data.status === 'success') {
-          setTotal(response.data.data);
-        }
-      });
-  }, [deliveryDistance, orderName, subtotal, tax, total]);
+    };
+
+    loadTotals();
+    return () => {
+      active = false;
+    };
+  }, [deliveryDistance, orderName]);
   return (
     <div className={style.wrapper}>
+      {loadError && <p role='alert'>{loadError}</p>}
       {orderItems.length > 0 && renderDelivery()}
       <h3>Your Order</h3>
       {orderItems.map((orderItem, idx) => renderItem(orderItem, idx))}

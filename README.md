@@ -30,7 +30,7 @@ The Hangry Hippo app is divided into a back end and a front end. It is preferred
 
 The app's back end was originally created using [django](https://www.djangoproject.com/) and the [django REST framework](https://www.django-rest-framework.org/). For more information, read [here](https://stackabuse.com/creating-a-rest-api-with-django-rest-framework/).
 
-The back end requires [Python 3.8](https://www.python.org/downloads/). To make sure this is what your machine is working with, we recommend using this [Python version manager](https://realpython.com/intro-to-pyenv/).
+The back end requires Python 3.10, matching the version used by its GitHub Actions workflow. To make sure this is what your machine is working with, we recommend using this [Python version manager](https://realpython.com/intro-to-pyenv/).
 
 #### Front End Requirements
 
@@ -48,7 +48,7 @@ The front end was originally created using [Create React App](https://create-rea
 
     Windows:
 
-        cd quantic-test-courses\backend\hangry_api
+        cd quantic-test-course\backend\hangry_api
 
     macOS/Linux:
 
@@ -76,21 +76,23 @@ The front end was originally created using [Create React App](https://create-rea
 
         pip install -r requirements.txt
 
-5.  Run the server
-
-          manage.py runserver
-
-    > **Note:** If the current working directory isn't included in your OS's PATH environment variable, you'll need to prepend it to the command like so:
+5.  Configure local Django settings.
 
     Windows:
 
-        .\manage.py runserver
+        set DJANGO_DEBUG=true
 
     macOS/Linux:
 
-        ./manage.py runserver
+        export DJANGO_DEBUG=true
 
-6.  Verify the server is running by accessing the following API's.
+    When `DJANGO_DEBUG` is unset, debug mode is disabled. Deployments must provide `DJANGO_SECRET_KEY`; set `DJANGO_ALLOWED_HOSTS` and `CORS_ALLOWED_ORIGINS` to the deployed hostnames/origins as needed.
+
+6.  Run the server
+
+        python manage.py runserver
+
+7.  Verify the server is running by accessing the following APIs.
 
     - http://127.0.0.1:8000/api/food/
 
@@ -132,23 +134,27 @@ The front end was originally created using [Create React App](https://create-rea
 
 2.  Run the tests.
 
-        coverage run -m --source=./hangry_api pytest
+        coverage run --source=api,hangry_api -m pytest
 
     > **Note:** The server should not be running when you run tests.
 
 3.  As a result, you should see something like
 
         ================= test session starts ===================
-        platform linux -- Python 3.8.13, pytest-7.1.2, pluggy-1.0.0
+        platform linux -- Python 3.10, pytest, pluggy
         rootdir: ./quantic-test-course/backend/hangry_api
-        collected 5 items
+        collected 6 items
 
         tests/test_DeliveryCost.py ...                     [ 50%]
         tests/test_SubtotalCost.py ..                      [ 83%]
-        tests/test_Tax.py ...........                      [100%]
-        ================= 5 passed in 0.16s =====================
+        tests/test_Tax.py .                                [100%]
+        ================= 6 passed in 0.16s =====================
 
-4.  [Optional] Generate a coverage report:
+4.  Run the API tests.
+
+        python manage.py test api.tests
+
+5.  [Optional] Generate a coverage report:
 
         coverage report
 

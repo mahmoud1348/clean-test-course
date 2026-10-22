@@ -12,7 +12,7 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v7.0.1
-      - run: npm install
+      - run: npm ci
       - name: Run functional tests
         run: npm test -- --coverage --watchAll=false
   deploy:
@@ -23,7 +23,7 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v7.0.1
-      - run: npm install && npm run build
+      - run: npm ci && npm run build
       - name: Generate deployment package
         run: zip -r deploy.zip build Dockerfile
       - name: '**PLACEHOLDER** Deploy to Elastic Beanstalk'

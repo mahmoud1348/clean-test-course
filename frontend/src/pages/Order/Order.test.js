@@ -7,6 +7,10 @@ import Order from '.';
 import OrderContext from '../../context/OrderContext';
 
 describe('Test Order', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   let orderName;
   let orderItems;
   beforeEach(() => {
@@ -41,6 +45,20 @@ describe('Test Order', () => {
             data: {
               status: 'success',
               data: 5,
+            },
+          });
+        case `${API_URL}/api/tax/test-fun/0`:
+          return Promise.resolve({
+            data: {
+              status: 'success',
+              data: 0.62,
+            },
+          });
+        case `${API_URL}/api/total/test-fun/0`:
+          return Promise.resolve({
+            data: {
+              status: 'success',
+              data: 8.12,
             },
           });
         case `${API_URL}/api/tax/test-fun/5`:
@@ -82,6 +100,7 @@ describe('Test Order', () => {
       expect(screen.getAllByText('$2.50')).toHaveLength(1);
     });
     expect(screen.getAllByText('$5.00')).toHaveLength(1);
+    expect(axios.get).toHaveBeenCalledTimes(4);
   });
 
   it('Test Update Delivery Fee', async () => {

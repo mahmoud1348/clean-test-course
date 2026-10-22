@@ -22,7 +22,7 @@
   padding: 0 10px;
 }
 
-.action span {
+.action button {
   cursor: pointer;
   padding: 0px 5px;
 }
@@ -32,4 +32,9 @@
   padding: 5px;
   background-color: #fff;
   border-radius: 4px;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }

@@ -1,24 +1,36 @@
-#from django.shortcuts import render
-import json
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import FoodSerializer, CategorySerializer, OrderSerializer
+from .serializers import (
+    CategorySerializer,
+    FoodCreateSerializer,
+    FoodSerializer,
+    OrderCreateSerializer,
+    OrderSerializer,
+)
 from .models import Food, Category, Order
 from .controllers import Delivery, Subtotal, Tax, Total
 
 class FoodViews(APIView):
     def post(self, request):
-        serializer = FoodSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
-        else:
-            return Response({"status": "error", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = FoodCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {"status": "error", "data": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        food = serializer.save()
+        response_serializer = FoodSerializer(food)
+        return Response(
+            {"status": "success", "data": response_serializer.data},
+            status=status.HTTP_201_CREATED,
+        )
 
     def get(self, request, id=None):
-        if id:
-            item = Food.objects.get(id=id)
+        if id is not None:
+            item = get_object_or_404(Food, id=id)
             serializer = FoodSerializer(item)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
@@ -36,8 +48,8 @@ class CategoryViews(APIView):
             return Response({"status": "error", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, id=None):
-        if id:
-            item = Category.objects.get(id=id)
+        if id is not None:
+            item = get_object_or_404(Category, id=id)
             serializer = CategorySerializer(item)
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
@@ -60,18 +72,19 @@ class OrderViews(APIView):
         return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
 
     def post(self, request):
-        data = json.loads(request.body)
-        foodId = data.get('item',None)
-        quantity = data.get('quantity', None)
-        orderName = data.get('name', None)
-        foodItem = Food.objects.get(id = foodId)
-        order = Order()
-        order.name = orderName
-        order.quantity = quantity
-        order.item = foodItem
-        order.save()
-        serializer = OrderSerializer(order)
-        return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
+        serializer = OrderCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {"status": "error", "data": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        order = serializer.save()
+        response_serializer = OrderSerializer(order)
+        return Response(
+            {"status": "success", "data": response_serializer.data},
+            status=status.HTTP_201_CREATED,
+        )
 
 class DeliveryView(APIView):
     def get(self, request, name=None, distance=0):

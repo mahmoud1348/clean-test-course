@@ -20,6 +20,15 @@ class FoodSerializer(serializers.ModelSerializer):
         model = Food
         fields = ('__all__')
 
+
+class FoodCreateSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
+
+    class Meta:
+        model = Food
+        fields = ('name', 'price', 'description', 'category')
+
+
 class OrderSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=225)
     item = serializers.StringRelatedField()
@@ -28,3 +37,12 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ('__all__')
+
+
+class OrderCreateSerializer(serializers.ModelSerializer):
+    item = serializers.PrimaryKeyRelatedField(queryset=Food.objects.all())
+    quantity = serializers.IntegerField(min_value=1)
+
+    class Meta:
+        model = Order
+        fields = ('name', 'item', 'quantity')
