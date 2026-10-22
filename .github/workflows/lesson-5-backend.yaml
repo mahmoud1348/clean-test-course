@@ -38,7 +38,7 @@ jobs:
           pip install pytest django_mock_queries six coverage
       - name: Unit Tests
         run: |
-          coverage run -m --source=./hangry_api pytest
+          coverage run --source=./hangry_api -m pytest
           coverage report
   deploy:
     needs: [unit_test]
@@ -55,10 +55,11 @@ jobs:
         run: zip -r deploy.zip . -x '*.git*'
       - name: '**PLACEHOLDER** Deploy to Elastic Beanstalk'
         run: echo Placeholder for Deployment
-  security_test:
-    with:
-      target: 'https://hangryhippo.quantic.host'
+  dast_scan:
     needs: [deploy]
     runs-on: ubuntu-latest
-    - name: ZAP Baseline Scan
-      uses: zaproxy/action-baseline@v0.15.0
+    steps:
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: 'https://hangryhippo.quantic.host'
