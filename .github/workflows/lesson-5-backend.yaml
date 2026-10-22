@@ -55,3 +55,10 @@ jobs:
         run: zip -r deploy.zip . -x '*.git*'
       - name: '**PLACEHOLDER** Deploy to Elastic Beanstalk'
         run: echo Placeholder for Deployment
+  security_test:
+    with:
+      target: 'https://hangryhippo.quantic.host'
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    - name: ZAP Baseline Scan
+      uses: zaproxy/action-baseline@v0.15.0
