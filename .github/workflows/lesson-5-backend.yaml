@@ -3,20 +3,23 @@ name: Lesson 5 SAST
 on:
   push:
     branches:
-      - lesson-5
-
+      - lesson-5-complete
 jobs:
   security_test:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
-    name: Run pycharm security test
+    name: Execute the PyCharm security test
     steps:
       - uses: actions/checkout@v7.0.1
-      - name: Run pycharm security test
+      - name: Disable Debug
+        run: |
+          sed -i 's/DEBUG = True/DEBUG = False/g' hangry_api/hangry_api/settings.py
+      - name: Run PyCharm Security
         uses: tonybaloney/pycharm-security@1.25.1
-
+        with:
+          fail_on_warnings: 'yes'
   unit_test:
     needs: [security_test]
     runs-on: ubuntu-latest
@@ -35,9 +38,8 @@ jobs:
           pip install pytest django_mock_queries six coverage
       - name: Unit Tests
         run: |
-          coverage run --source=./hangry_api -m pytest
+          coverage run -m --source=./hangry_api pytest
           coverage report
-
   deploy:
     needs: [unit_test]
     runs-on: ubuntu-latest
